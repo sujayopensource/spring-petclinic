@@ -13,6 +13,83 @@ This is a sample application built with [Micronaut](https://micronaut.io/) that 
 - **Cache**: Caffeine
 - **Testing**: JUnit 5
 
+## High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        PetClinic Application                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
+│  │   Web Layer     │    │  Business Layer │    │  Data Layer  │ │
+│  │                 │    │                 │    │              │ │
+│  │ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌──────────┐ │ │
+│  │ │Controllers  │ │    │ │Services     │ │    │ │Repositories│ │ │
+│  │ │             │ │    │ │             │ │    │ │           │ │ │
+│  │ │•OwnerCtrl   │ │    │ │•ClinicSvc   │ │    │ │•OwnerRepo │ │ │
+│  │ │•PetCtrl     │ │    │ │•Validation  │ │    │ │•PetRepo   │ │ │
+│  │ │•VetCtrl     │ │    │ │•Business    │ │    │ │•VetRepo   │ │ │
+│  │ │•VisitCtrl   │ │    │ │  Logic      │ │    │ │•VisitRepo │ │ │
+│  │ └─────────────┘ │    │ └─────────────┘ │    │ └──────────┘ │ │
+│  └─────────────────┘    └─────────────────┘    └──────────────┘ │
+│           │                       │                    │        │
+│           │                       │                    │        │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
+│  │  Presentation   │    │   Domain Model  │    │   Database   │ │
+│  │                 │    │                 │    │              │ │
+│  │ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌──────────┐ │ │
+│  │ │Thymeleaf    │ │    │ │Entities     │ │    │ │H2 Database│ │ │
+│  │ │Templates    │ │    │ │             │ │    │ │           │ │ │
+│  │ │             │ │    │ │•Owner       │ │    │ │•In-Memory │ │ │
+│  │ │•HTML Views  │ │    │ │•Pet         │ │    │ │•Auto-Init │ │ │
+│  │ │•CSS/JS      │ │    │ │•Vet         │ │    │ │•Sample    │ │ │
+│  │ │•Bootstrap   │ │    │ │•Visit       │ │    │ │  Data     │ │ │
+│  │ └─────────────┘ │    │ └─────────────┘ │    │ └──────────┘ │ │
+│  └─────────────────┘    └─────────────────┘    └──────────────┘ │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                    Micronaut Framework                          │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
+│  │   HTTP Server   │    │  DI Container   │    │   Runtime    │ │
+│  │                 │    │                 │    │              │ │
+│  │•Netty Server    │    │•Compile-time    │    │•Fast Startup │ │ │
+│  │•Routing         │    │  DI             │    │•Low Memory   │ │ │
+│  │•Request/Response│    │•Validation      │    │•Cloud Native │ │ │
+│  └─────────────────┘    └─────────────────┘    └──────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Architecture Layers
+
+1. **Web Layer**: Handles HTTP requests and responses
+   - Controllers process incoming requests
+   - Thymeleaf templates render HTML responses
+   - Static resources (CSS, JS, images)
+
+2. **Business Layer**: Contains application logic
+   - Services implement business rules
+   - Validation and data processing
+   - Transaction management
+
+3. **Data Layer**: Manages data persistence
+   - Repositories provide data access
+   - Hibernate JPA for ORM
+   - H2 in-memory database
+
+4. **Domain Model**: Core business entities
+   - Owner, Pet, Vet, Visit entities
+   - Relationships and business rules
+   - Data validation annotations
+
+### Key Features
+
+- **Layered Architecture**: Clear separation of concerns
+- **Dependency Injection**: Micronaut's compile-time DI
+- **RESTful Design**: Clean URL structure and HTTP methods
+- **Template Engine**: Server-side rendering with Thymeleaf
+- **Database Integration**: JPA with automatic schema generation
+- **Caching**: Built-in caching support for performance
+
 ## Features
 
 - **Owner Management**: Create, read, update owners
