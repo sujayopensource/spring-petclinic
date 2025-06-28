@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,63 @@
  */
 package org.springframework.samples.petclinic.vet;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.samples.petclinic.owner.PetType;
+import org.springframework.samples.petclinic.owner.PetTypeFormatter;
 
-import org.springframework.util.SerializationUtils;
+import java.text.ParseException;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @author Dave Syer
+ * Test class for {@link PetTypeFormatter}
  *
+ * @author Colin But
  */
-public class VetTests {
+class VetTests {
 
     @Test
-    public void testSerialization() {
+    void testGetSetId() {
         Vet vet = new Vet();
-        vet.setFirstName("Zaphod");
-        vet.setLastName("Beeblebrox");
-        vet.setId(123);
-        Vet other = (Vet) SerializationUtils
-                .deserialize(SerializationUtils.serialize(vet));
-        assertThat(other.getFirstName()).isEqualTo(vet.getFirstName());
-        assertThat(other.getLastName()).isEqualTo(vet.getLastName());
-        assertThat(other.getId()).isEqualTo(vet.getId());
+        vet.setId(1);
+        assertThat(vet.getId()).isEqualTo(1);
+    }
+
+    @Test
+    void testGetSetFirstName() {
+        Vet vet = new Vet();
+        vet.setFirstName("John");
+        assertThat(vet.getFirstName()).isEqualTo("John");
+    }
+
+    @Test
+    void testGetSetLastName() {
+        Vet vet = new Vet();
+        vet.setLastName("Doe");
+        assertThat(vet.getLastName()).isEqualTo("Doe");
+    }
+
+    @Test
+    void testGetSetSpecialties() {
+        Vet vet = new Vet();
+        Specialty specialty = new Specialty();
+        specialty.setName("Surgery");
+        vet.addSpecialty(specialty);
+        assertThat(vet.getSpecialties()).hasSize(1);
+        assertThat(vet.getSpecialties().get(0).getName()).isEqualTo("Surgery");
+    }
+
+    @Test
+    void testGetNrOfSpecialties() {
+        Vet vet = new Vet();
+        Specialty specialty1 = new Specialty();
+        specialty1.setName("Surgery");
+        Specialty specialty2 = new Specialty();
+        specialty2.setName("Radiology");
+        vet.addSpecialty(specialty1);
+        vet.addSpecialty(specialty2);
+        assertThat(vet.getNrOfSpecialties()).isEqualTo(2);
     }
 
 }

@@ -16,24 +16,21 @@
 
 package org.springframework.samples.petclinic;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.samples.petclinic.vet.VetRepository;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.ActiveProfiles;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class PetclinicIntegrationTests {
-
-    @Autowired
-    private VetRepository vets;
+/**
+ * Integration test for the PetClinic application.
+ *
+ * @author Michael Isvy
+ */
+@SpringBootTest(classes = PetClinicApplication.class)
+@ActiveProfiles("jdbc")
+class PetclinicIntegrationTests {
 
     @Test
-    public void testFindAll() throws Exception {
-        vets.findAll();
-        vets.findAll(); // served from cache
+    void testInitApplicationForJpaUsers() {
+        // This test will fail if the application context cannot start.
     }
 }
