@@ -207,6 +207,105 @@ If the veterinarians page shows empty, check:
 - Templates are located in `src/main/resources/views/`
 - Thymeleaf expressions may need adjustment for Micronaut compatibility
 
+## Known Issues
+
+### 🚨 **Critical Issues**
+
+#### 1. Veterinarians Page Not Displaying Data
+- **Issue**: `/vets.html` page shows empty table despite data being in database
+- **Status**: Under investigation
+- **Symptoms**: 
+  - Console shows "Found 6 vets in database" but page is empty
+  - Caching has been disabled but issue persists
+  - `/test` endpoint shows data exists
+- **Workaround**: Use `/test` endpoint to verify data
+- **Root Cause**: Suspected controller routing or template rendering issue
+
+#### 2. Database Initialization Timing
+- **Issue**: Database initialization may run before Hibernate creates tables
+- **Status**: Partially resolved with background thread approach
+- **Symptoms**: "Table not found" errors during startup
+- **Workaround**: 5-second delay added to initialization
+- **Root Cause**: Race condition between Hibernate schema creation and data initialization
+
+### ⚠️ **Medium Priority Issues**
+
+#### 3. Pet Creation Form Parameter Issues
+- **Issue**: `/owners/{id}/pets/new` endpoint expects `typeId` parameter
+- **Status**: Partially resolved
+- **Symptoms**: "Required argument [Integer typeId] not specified" error
+- **Workaround**: Ensure pet types are created in database initialization
+- **Root Cause**: Form parameter binding issues with Micronaut
+
+#### 4. Internationalization (i18n) Issues
+- **Issue**: Message keys showing as `??key??` instead of translated text
+- **Status**: Partially resolved with custom message resolver
+- **Symptoms**: 
+  - Welcome page shows `??welcome??`
+  - Some messages not properly resolved
+- **Workaround**: Custom Thymeleaf message resolver implemented
+- **Root Cause**: Micronaut doesn't automatically load message bundles like Spring Boot
+
+#### 5. Form Data Binding Limitations
+- **Issue**: Micronaut doesn't bind form data directly to objects
+- **Status**: Workaround implemented
+- **Symptoms**: Form submissions fail with "Content Type not allowed"
+- **Workaround**: Controllers accept individual parameters and manually create objects
+- **Root Cause**: Framework differences between Spring Boot and Micronaut
+
+### 🔧 **Minor Issues**
+
+#### 6. IDE Import Resolution Warnings
+- **Issue**: Linter shows import resolution errors for Micronaut annotations
+- **Status**: Cosmetic issue
+- **Symptoms**: Red squiggly lines under imports like `io.micronaut`, `jakarta.inject`
+- **Workaround**: Code compiles and runs correctly despite warnings
+- **Root Cause**: IDE configuration or temporary indexing issues
+
+#### 7. Verbose Logging
+- **Issue**: Application produces very verbose logs during startup
+- **Status**: Partially resolved with logging configuration
+- **Symptoms**: Console flooded with debug messages
+- **Workaround**: Logging levels configured in `application.yml`
+- **Root Cause**: Default Micronaut logging verbosity
+
+#### 8. Template Expression Compatibility
+- **Issue**: Some Thymeleaf expressions not compatible with Micronaut
+- **Status**: Partially resolved
+- **Symptoms**: 
+  - OGNL parsing errors for safe navigation operators (`?.`)
+  - `#fields.hasAnyErrors()` not available
+- **Workaround**: Simplified template expressions used
+- **Root Cause**: Different Thymeleaf configuration in Micronaut
+
+### 📋 **Migration-Related Issues**
+
+#### 9. Framework Differences
+- **Issue**: Various Spring Boot to Micronaut migration challenges
+- **Status**: Ongoing
+- **Areas Affected**:
+  - Database initialization approach
+  - Form handling and validation
+  - Template engine configuration
+  - Dependency injection patterns
+  - Caching mechanisms
+
+### 🔄 **In Progress**
+
+#### 10. Comprehensive Testing
+- **Issue**: Limited test coverage for migrated components
+- **Status**: Not started
+- **Needed**: Unit tests, integration tests, end-to-end tests
+- **Priority**: Medium
+
+### 📝 **Documentation Gaps**
+
+#### 11. API Documentation
+- **Issue**: No OpenAPI/Swagger documentation
+- **Status**: Not implemented
+- **Needed**: API endpoint documentation
+- **Priority**: Low
+
 ## Contributing
 
 This is a sample application for learning purposes. Feel free to explore the code and experiment with different features.
