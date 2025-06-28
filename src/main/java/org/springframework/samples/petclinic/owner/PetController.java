@@ -15,96 +15,117 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.MediaType;
+import io.micronaut.http.annotation.Consumes;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Post;
+import io.micronaut.views.View;
+import jakarta.inject.Inject;
 
-import jakarta.validation.Valid;
-import java.util.Collection;
+import java.net.URI;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 /**
  * @author Juergen Hoeller
  * @author Ken Krebs
  * @author Arjen Poutsma
  * @author Michael Isvy
+ * @author Dave Syer
+ * @author Colin But
  */
-@Controller
-@RequestMapping("/owners/{ownerId}")
-class PetController {
+@Controller("/owners/{ownerId}/pets")
+public class PetController {
 
-    private static final String VIEWS_PETS_CREATE_OR_UPDATE_FORM = "pets/createOrUpdatePetForm";
     private final PetRepository pets;
     private final OwnerRepository owners;
+    private final PetTypeRepository petTypes;
 
-    public PetController(PetRepository pets, OwnerRepository owners) {
+    @Inject
+    public PetController(PetRepository pets, OwnerRepository owners, PetTypeRepository petTypes) {
         this.pets = pets;
         this.owners = owners;
+        this.petTypes = petTypes;
     }
 
-    @ModelAttribute("types")
-    public Collection<PetType> populatePetTypes() {
-        return this.pets.findPetTypes();
-    }
-
-    @ModelAttribute("owner")
-    public Owner findOwner(@PathVariable("ownerId") int ownerId) {
-        return this.owners.findById(ownerId);
-    }
-
-    @InitBinder("owner")
-    public void initOwnerBinder(WebDataBinder dataBinder) {
-        dataBinder.setDisallowedFields("id");
-    }
-
-    @InitBinder("pet")
-    public void initPetBinder(WebDataBinder dataBinder) {
-        dataBinder.setValidator(new PetValidator());
-    }
-
-    @GetMapping("/pets/new")
-    public String initCreationForm(Owner owner, ModelMap model) {
-        Pet pet = new Pet();
-        owner.addPet(pet);
-        model.put("pet", pet);
-        return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-    }
-
-    @PostMapping("/pets/new")
-    public String processCreationForm(Owner owner, @Valid Pet pet, BindingResult result, ModelMap model) {
-        if (StringUtils.hasLength(pet.getName()) && pet.isNew() && owner.getPet(pet.getName(), true) != null){
-            result.rejectValue("name", "duplicate", "already exists");
-        }
-        owner.addPet(pet);
-        if (result.hasErrors()) {
-            model.put("pet", pet);
-            return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-        } else {
-            this.pets.save(pet);
-            return "redirect:/owners/{ownerId}";
+    @Get("/new")
+    @View("pets/createOrUpdatePetForm")
+    public Map<String, Object> initCreationForm(Integer ownerId) {
+        System.out.println("initCreationForm called with ownerId: " + ownerId);
+        try {
+            Owner owner = this.owners.findById(ownerId).orElseThrow(() -> 
+                new RuntimeException("Owner not found with id: " + ownerId));
+            Pet pet = new Pet();
+            owner.addPet(pet);
+            var types = this.petTypes.findAll();
+            System.out.println("Found " + types.size() + " pet types for form");
+            return Map.of("owner", owner, "pet", pet, "types", types);
+        } catch (Exception e) {
+            System.err.println("Error in initCreationForm: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
     }
 
-    @GetMapping("/pets/{petId}/edit")
-    public String initUpdateForm(@PathVariable("petId") int petId, ModelMap model) {
-        Pet pet = this.pets.findById(petId);
-        model.put("pet", pet);
-        return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-    }
-
-    @PostMapping("/pets/{petId}/edit")
-    public String processUpdateForm(@Valid Pet pet, BindingResult result, Owner owner, ModelMap model) {
-        if (result.hasErrors()) {
-            pet.setOwner(owner);
-            model.put("pet", pet);
-            return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-        } else {
+    @Post("/new")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @View("pets/createOrUpdatePetForm")
+    public HttpResponse<?> processCreationForm(Integer ownerId, String name, String birthDate, Integer typeId) {
+        try {
+            Owner owner = this.owners.findById(ownerId).orElseThrow(() -> 
+                new RuntimeException("Owner not found with id: " + ownerId));
+            
+            Pet pet = new Pet();
+            pet.setName(name);
+            if (birthDate != null && !birthDate.trim().isEmpty()) {
+                pet.setBirthDate(LocalDate.parse(birthDate, DateTimeFormatter.ISO_LOCAL_DATE));
+            }
+            if (typeId != null) {
+                pet.setType(this.petTypes.findById(typeId).orElse(null));
+            }
+            
             owner.addPet(pet);
             this.pets.save(pet);
-            return "redirect:/owners/{ownerId}";
+            return HttpResponse.redirect(URI.create("/owners/" + ownerId));
+        } catch (Exception e) {
+            System.err.println("Error in processCreationForm: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
     }
 
+    @Get("/{petId}/edit")
+    @View("pets/createOrUpdatePetForm")
+    public Map<String, Object> initUpdateForm(Integer ownerId, Integer petId) {
+        Owner owner = this.owners.findById(ownerId).orElseThrow(() -> 
+            new RuntimeException("Owner not found with id: " + ownerId));
+        Pet pet = this.pets.findById(petId).orElseThrow(() -> 
+            new RuntimeException("Pet not found with id: " + petId));
+        return Map.of("owner", owner, "pet", pet, "types", this.petTypes.findAll());
+    }
+
+    @Post("/{petId}/edit")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @View("pets/createOrUpdatePetForm")
+    public HttpResponse<?> processUpdateForm(Integer ownerId, Integer petId, String name, String birthDate, Integer typeId) {
+        Owner owner = this.owners.findById(ownerId).orElseThrow(() -> 
+            new RuntimeException("Owner not found with id: " + ownerId));
+        Pet pet = this.pets.findById(petId).orElseThrow(() -> 
+            new RuntimeException("Pet not found with id: " + petId));
+        
+        pet.setName(name);
+        if (birthDate != null && !birthDate.trim().isEmpty()) {
+            pet.setBirthDate(LocalDate.parse(birthDate, DateTimeFormatter.ISO_LOCAL_DATE));
+        }
+        if (typeId != null) {
+            pet.setType(this.petTypes.findById(typeId).orElse(null));
+        }
+        pet.setOwner(owner);
+        
+        this.pets.save(pet);
+        return HttpResponse.redirect(URI.create("/owners/" + ownerId));
+    }
 }

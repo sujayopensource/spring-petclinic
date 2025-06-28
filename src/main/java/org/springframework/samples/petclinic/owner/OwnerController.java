@@ -15,18 +15,17 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.servlet.ModelAndView;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.MediaType;
+import io.micronaut.http.annotation.Consumes;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Post;
+import io.micronaut.views.View;
+import jakarta.inject.Inject;
 
-import jakarta.validation.Valid;
-import java.util.Collection;
+import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,100 +33,103 @@ import java.util.Map;
  * @author Ken Krebs
  * @author Arjen Poutsma
  * @author Michael Isvy
+ * @author Dave Syer
+ * @author Colin But
  */
-@Controller
-class OwnerController {
+@Controller("/owners")
+public class OwnerController {
 
-    private static final String VIEWS_OWNER_CREATE_OR_UPDATE_FORM = "owners/createOrUpdateOwnerForm";
     private final OwnerRepository owners;
+    private final PetRepository pets;
 
-
-    public OwnerController(OwnerRepository clinicService) {
+    @Inject
+    public OwnerController(OwnerRepository clinicService, PetRepository pets) {
         this.owners = clinicService;
+        this.pets = pets;
     }
 
-    @InitBinder
-    public void setAllowedFields(WebDataBinder dataBinder) {
-        dataBinder.setDisallowedFields("id");
+    @Get("/find")
+    @View("owners/findOwners")
+    public Map<String, Object> initFindForm() {
+        return Map.of("owner", new Owner());
     }
 
-    @GetMapping("/owners/new")
-    public String initCreationForm(Map<String, Object> model) {
-        Owner owner = new Owner();
-        model.put("owner", owner);
-        return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
-    }
-
-    @PostMapping("/owners/new")
-    public String processCreationForm(@Valid Owner owner, BindingResult result) {
-        if (result.hasErrors()) {
-            return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
-        } else {
-            this.owners.save(owner);
-            return "redirect:/owners/" + owner.getId();
-        }
-    }
-
-    @GetMapping("/owners/find")
-    public String initFindForm(Map<String, Object> model) {
-        model.put("owner", new Owner());
-        return "owners/findOwners";
-    }
-
-    @GetMapping("/owners")
-    public String processFindForm(Owner owner, BindingResult result, Map<String, Object> model) {
-
-        // allow parameterless GET request for /owners to return all records
-        if (owner.getLastName() == null) {
-            owner.setLastName(""); // empty string signifies broadest possible search
-        }
-
+    @Get("/")
+    @View("owners/ownersList")
+    public Map<String, Object> processFindForm(String lastName) {
         // find owners by last name
-        Collection<Owner> results = this.owners.findByLastName(owner.getLastName());
+        List<Owner> results;
+        if (lastName == null || lastName.trim().isEmpty()) {
+            // If no lastName provided, return empty results
+            results = List.of();
+        } else {
+            results = this.owners.findByLastName(lastName.trim());
+        }
+        
         if (results.isEmpty()) {
             // no owners found
-            result.rejectValue("lastName", "notFound", "not found");
-            return "owners/findOwners";
+            return Map.of("owner", new Owner(), "selections", results);
         } else if (results.size() == 1) {
             // 1 owner found
-            owner = results.iterator().next();
-            return "redirect:/owners/" + owner.getId();
+            Owner owner = results.get(0);
+            return Map.of("owner", owner);
         } else {
             // multiple owners found
-            model.put("selections", results);
-            return "owners/ownersList";
+            return Map.of("selections", results);
         }
     }
 
-    @GetMapping("/owners/{ownerId}/edit")
-    public String initUpdateOwnerForm(@PathVariable("ownerId") int ownerId, Model model) {
-        Owner owner = this.owners.findById(ownerId);
-        model.addAttribute(owner);
-        return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
+    @Get("/{ownerId}")
+    @View("owners/ownerDetails")
+    public Map<String, Object> showOwner(Integer ownerId) {
+        Owner owner = this.owners.findById(ownerId).orElseThrow(() -> 
+            new RuntimeException("Owner not found with id: " + ownerId));
+        return Map.of("owner", owner);
     }
 
-    @PostMapping("/owners/{ownerId}/edit")
-    public String processUpdateOwnerForm(@Valid Owner owner, BindingResult result, @PathVariable("ownerId") int ownerId) {
-        if (result.hasErrors()) {
-            return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
-        } else {
-            owner.setId(ownerId);
-            this.owners.save(owner);
-            return "redirect:/owners/{ownerId}";
-        }
+    @Get("/new")
+    @View("owners/createOrUpdateOwnerForm")
+    public Map<String, Object> initCreationForm() {
+        return Map.of("owner", new Owner());
     }
 
-    /**
-     * Custom handler for displaying an owner.
-     *
-     * @param ownerId the ID of the owner to display
-     * @return a ModelMap with the model attributes for the view
-     */
-    @GetMapping("/owners/{ownerId}")
-    public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
-        ModelAndView mav = new ModelAndView("owners/ownerDetails");
-        mav.addObject(this.owners.findById(ownerId));
-        return mav;
+    @Post("/new")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @View("owners/createOrUpdateOwnerForm")
+    public HttpResponse<?> processCreationForm(String firstName, String lastName, String address, String city, String telephone) {
+        Owner owner = new Owner();
+        owner.setFirstName(firstName);
+        owner.setLastName(lastName);
+        owner.setAddress(address);
+        owner.setCity(city);
+        owner.setTelephone(telephone);
+        
+        this.owners.save(owner);
+        return HttpResponse.redirect(URI.create("/owners/" + owner.getId()));
     }
 
+    @Get("/{ownerId}/edit")
+    @View("owners/createOrUpdateOwnerForm")
+    public Map<String, Object> initUpdateOwnerForm(Integer ownerId) {
+        Owner owner = this.owners.findById(ownerId).orElseThrow(() -> 
+            new RuntimeException("Owner not found with id: " + ownerId));
+        return Map.of("owner", owner);
+    }
+
+    @Post("/{ownerId}/edit")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @View("owners/createOrUpdateOwnerForm")
+    public HttpResponse<?> processUpdateOwnerForm(Integer ownerId, String firstName, String lastName, String address, String city, String telephone) {
+        Owner owner = this.owners.findById(ownerId).orElseThrow(() -> 
+            new RuntimeException("Owner not found with id: " + ownerId));
+        
+        owner.setFirstName(firstName);
+        owner.setLastName(lastName);
+        owner.setAddress(address);
+        owner.setCity(city);
+        owner.setTelephone(telephone);
+        
+        this.owners.save(owner);
+        return HttpResponse.redirect(URI.create("/owners/" + ownerId));
+    }
 }

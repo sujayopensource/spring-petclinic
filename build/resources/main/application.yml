@@ -1,0 +1,58 @@
+micronaut:
+  application:
+    name: petclinic
+  server:
+    port: 8080
+  router:
+    static-resources:
+      static:
+        paths: classpath:static
+        mapping: /static/**
+  views:
+    thymeleaf:
+      enabled: true
+      cache: false
+      prefix: classpath:/views/
+      suffix: .html
+  cache:
+    caches:
+      vets:
+        expire-after-write: 30s
+      petTypes:
+        expire-after-write: 30s
+  context:
+    scan:
+      packages: "org.springframework.samples.petclinic"
+
+datasources:
+  default:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=HSQLDB
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ""
+    dialect: H2
+
+jpa:
+  default:
+    entity-scan-packages: "org.springframework.samples.petclinic"
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: create-drop
+        show_sql: true
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+    reactive: false
+
+hibernate:
+  cache:
+    use_second_level_cache: false
+
+logging:
+  level:
+    org.springframework.samples.petclinic: DEBUG
+    io.micronaut: WARN
+    io.micronaut.views: WARN
+    org.thymeleaf: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE 

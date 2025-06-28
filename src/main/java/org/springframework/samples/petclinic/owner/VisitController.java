@@ -15,63 +15,75 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.MediaType;
+import io.micronaut.http.annotation.Consumes;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Post;
+import io.micronaut.views.View;
+import jakarta.inject.Inject;
 import org.springframework.samples.petclinic.visit.Visit;
 import org.springframework.samples.petclinic.visit.VisitRepository;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
-import jakarta.validation.Valid;
+import java.net.URI;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 /**
  * @author Juergen Hoeller
  * @author Ken Krebs
  * @author Arjen Poutsma
  * @author Michael Isvy
+ * @author Dave Syer
+ * @author Colin But
  */
-@Controller
-@RequestMapping("/owners/{ownerId}/pets/{petId}")
-class VisitController {
+@Controller("/owners/{ownerId}/pets/{petId}/visits")
+public class VisitController {
 
-    private static final String VIEWS_PETS_CREATE_OR_UPDATE_VISIT_FORM = "pets/createOrUpdateVisitForm";
-    private final PetRepository pets;
     private final VisitRepository visits;
+    private final PetRepository pets;
 
-    public VisitController(PetRepository pets, VisitRepository visits) {
-        this.pets = pets;
+    @Inject
+    public VisitController(VisitRepository visits, PetRepository pets) {
         this.visits = visits;
+        this.pets = pets;
     }
 
-    @ModelAttribute("pet")
-    public Pet findPet(@PathVariable("petId") int petId) {
-        return this.pets.findById(petId);
-    }
-
-    @GetMapping("/visits/new")
-    public String initNewVisitForm(@PathVariable("petId") int petId, ModelMap model) {
+    @Get("/new")
+    @View("pets/createOrUpdateVisitForm")
+    public Map<String, Object> initNewVisitForm(Integer petId) {
+        Pet pet = this.pets.findById(petId).orElseThrow(() -> 
+            new RuntimeException("Pet not found with id: " + petId));
         Visit visit = new Visit();
-        Pet pet = this.pets.findById(petId);
         pet.addVisit(visit);
-        visit.setPetId(petId);
-        model.put("visit", visit);
-        return VIEWS_PETS_CREATE_OR_UPDATE_VISIT_FORM;
+        return Map.of("pet", pet, "visit", visit);
     }
 
-    @PostMapping("/visits/new")
-    public String processNewVisitForm(@PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId, @Valid Visit visit, BindingResult result) {
-        if (result.hasErrors()) {
-            return VIEWS_PETS_CREATE_OR_UPDATE_VISIT_FORM;
-        } else {
-            Pet pet = this.pets.findById(petId);
-            pet.addVisit(visit);
-            this.visits.save(visit);
-            return "redirect:/owners/{ownerId}";
+    @Post("/new")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @View("pets/createOrUpdateVisitForm")
+    public HttpResponse<?> processNewVisitForm(Integer ownerId, Integer petId, String date, String description) {
+        Pet pet = this.pets.findById(petId).orElseThrow(() -> 
+            new RuntimeException("Pet not found with id: " + petId));
+        
+        Visit visit = new Visit();
+        if (date != null && !date.trim().isEmpty()) {
+            visit.setDate(LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE));
         }
+        visit.setDescription(description);
+        
+        pet.addVisit(visit);
+        this.visits.save(visit);
+        return HttpResponse.redirect(URI.create("/owners/" + ownerId));
     }
 
+    @Get("/")
+    @View("visitList")
+    public Map<String, Object> showVisits(Integer petId) {
+        Pet pet = this.pets.findById(petId).orElseThrow(() -> 
+            new RuntimeException("Pet not found with id: " + petId));
+        return Map.of("pet", pet, "visits", this.visits.findByPetId(petId));
+    }
 }

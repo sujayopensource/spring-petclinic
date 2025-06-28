@@ -1,0 +1,84 @@
+plugins {
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("io.micronaut.application") version "4.4.2"
+    id("io.micronaut.aot") version "4.4.2"
+}
+
+version = "0.1"
+group = "org.springframework.samples"
+
+repositories {
+    mavenCentral()
+}
+
+micronaut {
+    version = "4.4.2"
+}
+
+dependencies {
+    annotationProcessor("io.micronaut:micronaut-http-validation")
+    annotationProcessor("io.micronaut.data:micronaut-data-processor")
+    
+    implementation("io.micronaut:micronaut-http-client")
+    implementation("io.micronaut:micronaut-jackson-databind")
+    implementation("io.micronaut:micronaut-runtime")
+    implementation("io.micronaut:micronaut-management")
+    
+    // HTTP Server
+    implementation("io.micronaut:micronaut-http-server-netty")
+    
+    // Data
+    implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
+    implementation("io.micronaut.sql:micronaut-jdbc-hikari")
+    implementation("io.micronaut.sql:micronaut-hibernate-jpa")
+    
+    // Database
+    runtimeOnly("com.h2database:h2")
+    
+    // YAML support
+    runtimeOnly("org.yaml:snakeyaml")
+    
+    // Logging
+    runtimeOnly("ch.qos.logback:logback-classic")
+    
+    // Template Engine
+    implementation("io.micronaut.views:micronaut-views-thymeleaf")
+    
+    // Cache
+    implementation("io.micronaut.cache:micronaut-cache-caffeine")
+    
+    // Validation
+    implementation("io.micronaut.validation:micronaut-validation")
+    
+    // Test
+    testAnnotationProcessor("io.micronaut:micronaut-inject-java")
+    testImplementation("io.micronaut:micronaut-http-client")
+    testImplementation("io.micronaut.test:micronaut-test-junit5")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+}
+
+application {
+    mainClass.set("org.springframework.samples.petclinic.PetClinicApplication")
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+tasks {
+    compileJava {
+        options.encoding = "UTF-8"
+        options.compilerArgs.add("-parameters")
+    }
+    
+    compileTestJava {
+        options.encoding = "UTF-8"
+    }
+    
+    test {
+        useJUnitPlatform()
+    }
+}
+
+graalvmNative.toolchainDetection.set(false) 

@@ -16,20 +16,20 @@
 
 package org.springframework.samples.petclinic;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import io.micronaut.runtime.Micronaut;
 
 /**
- * PetClinic Spring Boot Application.
+ * PetClinic Micronaut Application.
  *
  * @author Dave Syer
  *
  */
-@SpringBootApplication
 public class PetClinicApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(PetClinicApplication.class, args);
+        System.out.println("Starting PetClinic Application...");
+        Micronaut.run(PetClinicApplication.class, args);
+        System.out.println("PetClinic Application started successfully!");
     }
 
 }

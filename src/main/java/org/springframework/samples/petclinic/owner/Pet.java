@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,28 +15,21 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
+import org.springframework.samples.petclinic.model.BaseEntity;
+import org.springframework.samples.petclinic.visit.Visit;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-
-import org.springframework.beans.support.MutableSortDefinition;
-import org.springframework.beans.support.PropertyComparator;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.samples.petclinic.model.NamedEntity;
-import org.springframework.samples.petclinic.visit.Visit;
 
 /**
  * Simple business object representing a pet.
@@ -44,13 +37,17 @@ import org.springframework.samples.petclinic.visit.Visit;
  * @author Ken Krebs
  * @author Juergen Hoeller
  * @author Sam Brannen
+ * @author Arjen Poutsma
  */
 @Entity
 @Table(name = "pets")
-public class Pet extends NamedEntity {
+public class Pet extends BaseEntity {
+
+    @Column(name = "name")
+    @NotEmpty
+    private String name;
 
     @Column(name = "birth_date")
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
     @ManyToOne
@@ -61,15 +58,22 @@ public class Pet extends NamedEntity {
     @JoinColumn(name = "owner_id")
     private Owner owner;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "petId", fetch = FetchType.EAGER)
-    private Set<Visit> visits = new LinkedHashSet<>();
+    private transient Set<Visit> visits = new HashSet<>();
 
-    public void setBirthDate(LocalDate birthDate) {
-        this.birthDate = birthDate;
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public LocalDate getBirthDate() {
         return this.birthDate;
+    }
+
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
     }
 
     public PetType getType() {
@@ -101,8 +105,6 @@ public class Pet extends NamedEntity {
 
     public List<Visit> getVisits() {
         List<Visit> sortedVisits = new ArrayList<>(getVisitsInternal());
-        PropertyComparator.sort(sortedVisits,
-                new MutableSortDefinition("date", false, false));
         return Collections.unmodifiableList(sortedVisits);
     }
 

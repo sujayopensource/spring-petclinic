@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,6 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,11 +22,13 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotEmpty;
-
-import org.springframework.beans.support.MutableSortDefinition;
-import org.springframework.beans.support.PropertyComparator;
-import org.springframework.core.style.ToStringCreator;
 import org.springframework.samples.petclinic.model.Person;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Simple JavaBean domain object representing an owner.
@@ -40,11 +36,12 @@ import org.springframework.samples.petclinic.model.Person;
  * @author Ken Krebs
  * @author Juergen Hoeller
  * @author Sam Brannen
- * @author Michael Isvy
+ * @author Arjen Poutsma
  */
 @Entity
 @Table(name = "owners")
 public class Owner extends Person {
+
     @Column(name = "address")
     @NotEmpty
     private String address;
@@ -58,8 +55,8 @@ public class Owner extends Person {
     @Digits(fraction = 0, integer = 10)
     private String telephone;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "owner")
-    private Set<Pet> pets;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "owner", fetch = jakarta.persistence.FetchType.EAGER)
+    private Set<Pet> pets = new HashSet<>();
 
     public String getAddress() {
         return this.address;
@@ -98,8 +95,6 @@ public class Owner extends Person {
 
     public List<Pet> getPets() {
         List<Pet> sortedPets = new ArrayList<>(getPetsInternal());
-        PropertyComparator.sort(sortedPets,
-                new MutableSortDefinition("name", true, true));
         return Collections.unmodifiableList(sortedPets);
     }
 
@@ -140,13 +135,4 @@ public class Owner extends Person {
         return null;
     }
 
-    @Override
-    public String toString() {
-        return new ToStringCreator(this)
-
-                .append("id", this.getId()).append("new", this.isNew())
-                .append("lastName", this.getLastName())
-                .append("firstName", this.getFirstName()).append("address", this.address)
-                .append("city", this.city).append("telephone", this.telephone).toString();
-    }
 }

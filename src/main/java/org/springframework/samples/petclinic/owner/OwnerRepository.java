@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,10 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.util.Collection;
+import io.micronaut.data.annotation.Repository;
+import io.micronaut.data.repository.CrudRepository;
 
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.Repository;
-import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 /**
  * Repository class for <code>Owner</code> domain objects All method names are compliant with Spring Data naming
@@ -31,33 +29,17 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Sam Brannen
  * @author Michael Isvy
  */
-public interface OwnerRepository extends Repository<Owner, Integer> {
+@Repository
+public interface OwnerRepository extends CrudRepository<Owner, Integer> {
 
     /**
-     * Retrieve {@link Owner}s from the data store by last name, returning all owners
+     * Retrieve <code>Owner</code>s from the data store by last name, returning all owners
      * whose last name <i>starts</i> with the given name.
+     *
      * @param lastName Value to search for
-     * @return a Collection of matching {@link Owner}s (or an empty Collection if none
+     * @return a <code>List</code> of matching <code>Owner</code>s (or an empty <code>List</code> if none
      * found)
      */
-    @Query("SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName LIKE :lastName%")
-    @Transactional(readOnly = true)
-    Collection<Owner> findByLastName(@Param("lastName") String lastName);
-
-    /**
-     * Retrieve an {@link Owner} from the data store by id.
-     * @param id the id to search for
-     * @return the {@link Owner} if found
-     */
-    @Query("SELECT owner FROM Owner owner left join fetch owner.pets WHERE owner.id =:id")
-    @Transactional(readOnly = true)
-    Owner findById(@Param("id") Integer id);
-
-    /**
-     * Save an {@link Owner} to the data store, either inserting or updating it.
-     * @param owner the {@link Owner} to save
-     */
-    void save(Owner owner);
-
+    List<Owner> findByLastName(String lastName);
 
 }

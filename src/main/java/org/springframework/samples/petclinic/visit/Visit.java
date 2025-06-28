@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2018 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,35 +15,36 @@
  */
 package org.springframework.samples.petclinic.visit;
 
-import java.time.LocalDate;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
-
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.BaseEntity;
+
+import java.time.LocalDate;
 
 /**
  * Simple JavaBean domain object representing a visit.
  *
  * @author Ken Krebs
- * @author Dave Syer
+ * @author Juergen Hoeller
+ * @author Sam Brannen
+ * @author Arjen Poutsma
  */
 @Entity
 @Table(name = "visits")
 public class Visit extends BaseEntity {
 
     @Column(name = "visit_date")
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
 
-    @NotEmpty
     @Column(name = "description")
+    @NotEmpty
     private String description;
 
-    @Column(name = "pet_id")
+    /**
+     * Holds value of property pet.
+     */
     private Integer petId;
 
     /**

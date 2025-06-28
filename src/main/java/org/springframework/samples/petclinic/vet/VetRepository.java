@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,8 @@
  */
 package org.springframework.samples.petclinic.vet;
 
-import java.util.Collection;
-
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.repository.Repository;
-import org.springframework.transaction.annotation.Transactional;
+import io.micronaut.data.annotation.Repository;
+import io.micronaut.data.repository.CrudRepository;
 
 /**
  * Repository class for <code>Vet</code> domain objects All method names are compliant with Spring Data naming
@@ -31,16 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Sam Brannen
  * @author Michael Isvy
  */
-public interface VetRepository extends Repository<Vet, Integer> {
-
-    /**
-     * Retrieve all <code>Vet</code>s from the data store.
-     *
-     * @return a <code>Collection</code> of <code>Vet</code>s
-     */
-    @Transactional(readOnly = true)
-    @Cacheable("vets")
-    Collection<Vet> findAll() throws DataAccessException;
-
+@Repository
+public interface VetRepository extends CrudRepository<Vet, Integer> {
 
 }

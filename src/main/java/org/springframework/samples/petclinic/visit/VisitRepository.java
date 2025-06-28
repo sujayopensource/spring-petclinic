@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@
  */
 package org.springframework.samples.petclinic.visit;
 
-import java.util.List;
+import io.micronaut.data.annotation.Repository;
+import io.micronaut.data.repository.CrudRepository;
 
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.repository.Repository;
-import org.springframework.samples.petclinic.model.BaseEntity;
+import java.util.List;
 
 /**
  * Repository class for <code>Visit</code> domain objects All method names are compliant with Spring Data naming
@@ -30,16 +29,16 @@ import org.springframework.samples.petclinic.model.BaseEntity;
  * @author Sam Brannen
  * @author Michael Isvy
  */
-public interface VisitRepository extends Repository<Visit, Integer> {
+@Repository
+public interface VisitRepository extends CrudRepository<Visit, Integer> {
 
     /**
-     * Save a <code>Visit</code> to the data store, either inserting or updating it.
+     * Retrieve all visits from the data store for a particular pet.
      *
-     * @param visit the <code>Visit</code> to save
-     * @see BaseEntity#isNew
+     * @param petId the pet id to search for
+     * @return a <code>List</code> of <code>Visit</code>s (or an empty <code>List</code> if none
+     * found)
      */
-    void save(Visit visit) throws DataAccessException;
-
     List<Visit> findByPetId(Integer petId);
 
 }

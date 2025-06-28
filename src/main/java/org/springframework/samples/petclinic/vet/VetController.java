@@ -15,10 +15,13 @@
  */
 package org.springframework.samples.petclinic.vet;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import io.micronaut.cache.annotation.Cacheable;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.views.View;
+import jakarta.inject.Inject;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,33 +29,99 @@ import java.util.Map;
  * @author Mark Fisher
  * @author Ken Krebs
  * @author Arjen Poutsma
+ * @author Michael Isvy
+ * @author Dave Syer
  */
-@Controller
-class VetController {
+@Controller("/vets")
+public class VetController {
 
-    private final VetRepository vets;
+    private final VetRepository vetRepository;
 
-    public VetController(VetRepository clinicService) {
-        this.vets = clinicService;
+    @Inject
+    public VetController(VetRepository vetRepository) {
+        this.vetRepository = vetRepository;
     }
 
-    @GetMapping("/vets.html")
-    public String showVetList(Map<String, Object> model) {
+    @Get("/")
+    @View("vets/vetList")
+    // @Cacheable("vets") - temporarily disabled for debugging
+    public Map<String, Object> showVetList() {
+        System.out.println("showVetList called (main controller)");
         // Here we are returning an object of type 'Vets' rather than a collection of Vet
         // objects so it is simpler for Object-Xml mapping
+        List<Vet> allVets = this.vetRepository.findAll();
+        System.out.println("Found " + allVets.size() + " vets in database");
+        for (Vet vet : allVets) {
+            System.out.println("Vet: " + vet.getFirstName() + " " + vet.getLastName() + " (ID: " + vet.getId() + ")");
+        }
+        
         Vets vets = new Vets();
-        vets.getVetList().addAll(this.vets.findAll());
-        model.put("vets", vets);
-        return "vets/vetList";
+        vets.getVetList().addAll(allVets);
+        return Map.of("vets", vets);
     }
 
-    @GetMapping({ "/vets" })
-    public @ResponseBody Vets showResourcesVetList() {
+    @Get("/vets.html")
+    @View("vets/vetList")
+    // @Cacheable("vets") - temporarily disabled for debugging
+    public Map<String, Object> showResourcesVetList() {
+        System.out.println("showResourcesVetList called (main controller)");
+        try {
+            // Here we are returning an object of type 'Vets' rather than a collection of Vet
+            // objects so it is simpler for Object-Xml mapping
+            List<Vet> allVets = this.vetRepository.findAll();
+            System.out.println("Found " + allVets.size() + " vets in database");
+            for (Vet vet : allVets) {
+                System.out.println("Vet: " + vet.getFirstName() + " " + vet.getLastName() + " (ID: " + vet.getId() + ")");
+                if (vet.getSpecialties() != null) {
+                    System.out.println("  Specialties: " + vet.getSpecialties().size());
+                    for (var specialty : vet.getSpecialties()) {
+                        System.out.println("    - " + specialty.getName());
+                    }
+                }
+            }
+            
+            Vets vets = new Vets();
+            vets.getVetList().addAll(allVets);
+            System.out.println("Returning vets object with " + vets.getVetList().size() + " vets");
+            System.out.println("Vets object: " + vets);
+            System.out.println("VetList: " + vets.getVetList());
+            
+            Map<String, Object> result = Map.of("vets", vets);
+            System.out.println("Returning result map: " + result);
+            return result;
+        } catch (Exception e) {
+            System.err.println("Error in showResourcesVetList: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+}
+
+@Controller("/vets.html")
+class VetHtmlController {
+
+    private final VetRepository vetRepository;
+
+    @Inject
+    public VetHtmlController(VetRepository vetRepository) {
+        this.vetRepository = vetRepository;
+    }
+
+    @Get("/")
+    @View("vets/vetList")
+    // @Cacheable("vets") - temporarily disabled for debugging
+    public Map<String, Object> showVetList() {
+        System.out.println("showVetList called (VetHtmlController)");
         // Here we are returning an object of type 'Vets' rather than a collection of Vet
-        // objects so it is simpler for JSon/Object mapping
+        // objects so it is simpler for Object-Xml mapping
+        List<Vet> allVets = this.vetRepository.findAll();
+        System.out.println("Found " + allVets.size() + " vets in database");
+        for (Vet vet : allVets) {
+            System.out.println("Vet: " + vet.getFirstName() + " " + vet.getLastName() + " (ID: " + vet.getId() + ")");
+        }
+        
         Vets vets = new Vets();
-        vets.getVetList().addAll(this.vets.findAll());
-        return vets;
+        vets.getVetList().addAll(allVets);
+        return Map.of("vets", vets);
     }
-
 }

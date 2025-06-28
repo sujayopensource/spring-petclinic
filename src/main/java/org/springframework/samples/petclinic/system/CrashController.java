@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2013 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,23 +15,26 @@
  */
 package org.springframework.samples.petclinic.system;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.views.View;
+
+import java.util.Map;
 
 /**
  * Controller used to showcase what happens when an exception is thrown
  *
  * @author Michael Isvy
  * <p/>
- * Also see how a view that resolves to "error" has been added ("error.html").
+ * Also see how a view that doesn't exist is displayed in <code>src/main/resources/templates/error.html</code>
  */
-@Controller
-class CrashController {
+@Controller("/oups")
+public class CrashController {
 
-    @GetMapping("/oups")
-    public String triggerException() {
-        throw new RuntimeException("Expected: controller used to showcase what "
-                + "happens when an exception is thrown");
+    @Get("/")
+    @View("exception")
+    public Map<String, Object> triggerException() {
+        throw new RuntimeException("Expected: controller used to showcase what happens when an exception is thrown");
     }
 
 }
