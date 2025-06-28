@@ -15,14 +15,15 @@
  */
 package org.springframework.samples.petclinic.model;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-import javax.validation.constraints.NotEmpty;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.validation.constraints.NotEmpty;
 
 /**
- * Simple JavaBean domain object representing an person.
+ * Simple JavaBean domain object representing a person.
  *
  * @author Ken Krebs
+ * @author Juergen Hoeller
  */
 @MappedSuperclass
 public class Person extends BaseEntity {
