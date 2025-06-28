@@ -1,3 +1,120 @@
+# PetClinic Micronaut Application
+
+This is a sample application built with [Micronaut](https://micronaut.io/) that demonstrates how to build a simple but complete web application.
+
+## Technology Stack
+
+- **Framework**: Micronaut 4.4.2
+- **Language**: Java 21
+- **Build Tool**: Gradle 8.5
+- **Database**: H2 (in-memory)
+- **ORM**: Hibernate JPA with Micronaut Data
+- **Template Engine**: Thymeleaf
+- **Cache**: Caffeine
+- **Testing**: JUnit 5
+
+## Features
+
+- **Owner Management**: Create, read, update owners
+- **Pet Management**: Add pets to owners, update pet information
+- **Veterinarian Management**: View list of veterinarians and their specialties
+- **Visit Management**: Schedule and view pet visits
+- **Error Handling**: Demonstrates exception handling
+
+## Getting Started
+
+### Prerequisites
+
+- Java 21 or higher
+- Gradle 8.5 or higher (or use the included wrapper)
+
+### Running the Application
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd spring-petclinic
+   ```
+
+2. **Run the application**:
+   ```bash
+   ./gradlew run
+   ```
+
+3. **Access the application**:
+   - Home page: http://localhost:8080
+   - Veterinarians: http://localhost:8080/vets
+   - Find Owners: http://localhost:8080/owners/find
+
+### Building the Application
+
+```bash
+./gradlew build
+```
+
+### Running Tests
+
+```bash
+./gradlew test
+```
+
+## Project Structure
+
+```
+src/
+├── main/
+│   ├── java/
+│   │   └── org/springframework/samples/petclinic/
+│   │       ├── model/          # Domain entities
+│   │       ├── owner/          # Owner and Pet management
+│   │       ├── vet/            # Veterinarian management
+│   │       ├── visit/          # Visit management
+│   │       └── system/         # System controllers
+│   ├── resources/
+│   │   ├── templates/          # Thymeleaf templates
+│   │   ├── static/             # Static resources
+│   │   └── application.yml     # Application configuration
+│   └── test/                   # Test classes
+```
+
+## Key Differences from Spring Boot Version
+
+This application has been transformed from Spring Boot to Micronaut:
+
+### Framework Changes
+- **Spring Boot** → **Micronaut**
+- **Maven** → **Gradle**
+- **Spring Data JPA** → **Micronaut Data**
+- **Spring MVC** → **Micronaut HTTP**
+
+### Annotation Changes
+- `@SpringBootApplication` → `Micronaut.run()`
+- `@Controller` → `@Controller` (Micronaut)
+- `@GetMapping` → `@Get`
+- `@PostMapping` → `@Post`
+- `@Autowired` → `@Inject`
+- `@Repository` → `@Repository` (Micronaut Data)
+
+### Configuration Changes
+- `application.properties` → `application.yml`
+- Spring Boot auto-configuration → Micronaut configuration
+
+## Benefits of Micronaut
+
+- **Fast Startup**: Compile-time dependency injection
+- **Low Memory Footprint**: Minimal runtime overhead
+- **Native Image Support**: Can be compiled to native executables
+- **Reactive Programming**: Built-in support for reactive streams
+- **Cloud-Native**: Designed for microservices and cloud deployment
+
+## Contributing
+
+This is a sample application for learning purposes. Feel free to explore the code and experiment with different features.
+
+## License
+
+This project is licensed under the Apache License, Version 2.0.
+
 # Spring PetClinic Sample Application [![Build Status](https://travis-ci.org/spring-projects/spring-petclinic.png?branch=master)](https://travis-ci.org/spring-projects/spring-petclinic/)
 
 ## Understanding the Spring Petclinic application with a few diagrams
@@ -66,7 +183,7 @@ Then either build on the command line `./mvnw generate-resources` or using the E
 
 3) Inside IntelliJ IDEA
 
-In the main menu, choose `File -> Open` and select the Petclinic [pom.xml](pom.xml). Click on the `Open` button.
+In the main menu, choose `File -> Open` and select the Petclinic [pom.xml](pom.xml). Click on the `Open` button.
 
 CSS files are generated from the Maven build. You can either build them on the command line `./mvnw generate-resources`
 or right click on the `spring-petclinic` project then `Maven -> Generates sources and Update Folders`.
